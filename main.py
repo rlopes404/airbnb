@@ -75,6 +75,10 @@ X_train, X_test = train_test_split(data, test_size=0.2, random_state=0)
 X_train, X_valid = train_test_split(X_train, test_size=0.1, random_state=0)
 
 
+plt.hist(X_train['price'].apply(math.log))
+plt.title('Log Price')
+plt.show()
+
 plt.hist(X_train['review_scores_rating'])
 plt.title('Review Scores Rating')
 plt.show()
@@ -98,23 +102,6 @@ replace_map = {'neighbourhood' : _map}
 X_train.replace(replace_map, inplace=True)
 X_valid.replace(replace_map, inplace=True)
 X_test.replace(replace_map, inplace=True)
-
-
-
-# #lets create bins: [0, 250, 500, 1000, 2000, 3000, np.inf ] 
-# bins = [0, 250, 500, 1000, 2000, 3000, np.inf]
-# names= ['B250', 'B500', 'B1k', 'B2k', 'B3k', 'BInf']
-
-
-# #one-hot encoding
-# neigh_bins = pd.cut(X_train[y_name], bins, labels=names)
-# X_train = pd.concat([X_train, pd.get_dummies(neigh_bins, prefix='is')], axis=1)
-
-# neigh_bins = pd.cut(X_valid[y_name], bins, labels=names)
-# X_valid = pd.concat([X_valid, pd.get_dummies(neigh_bins, prefix='is')], axis=1)
-
-# neigh_bins = pd.cut(X_test[y_name], bins, labels=names)
-# X_test = pd.concat([X_test, pd.get_dummies(neigh_bins, prefix='is')], axis=1)
 
 
 #analysis per bed_type
