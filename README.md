@@ -4,7 +4,6 @@ Todos os algoritmos foram implementados em Python, utilizando pacotes numpy, pan
 
 Dataset:
 - Dataset utilizado: listings.csv.gz, 22 de November, 2019
-
 - Dataset disponível em [Link](http://insideairbnb.com/get-the-data.html)
 
 ## Como foi a definição da sua estratégia de modelagem?
@@ -61,6 +60,6 @@ A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseli
 | GB | 1528.02 (3.23%) |
 | Stacking | 1480.10 |
 
-Em problemas de regressão, apesar de inalcançável, zero é o RMSE ideal. Claramente o melhor RMSE obtido, igual a 1480.10, está longe de zero. Ao analisar estatísticas da variável preço, verifica-se que, mesmo após a remoção de outliers, há uma grande amplitude,  a saber, igual 5702 em que os valores mínimo e máximo são iguais a 29 e 5731, respectivamente. Além disso, há o desvio padrão é igual a 690.52.
+Em problemas de regressão, apesar de inalcançável, zero é o RMSE ideal. Claramente o melhor RMSE obtido, igual a 1480.10, está longe de zero. Ao analisar estatísticas da variável preço, verifica-se que, mesmo após a remoção de outliers, há uma grande amplitude,  a saber, igual 5702 em que os valores mínimo e máximo são iguais a 29 e 5731, respectivamente. Além disso, há o desvio padrão é igual a 690.52. Por fim, no caso de Regressão Linear, é possível analisar os resíduos para avaliar os ajustes, como também estudar transformações log nas features ou variável de resposta (modelos log-linear, linear-log).
 
 Acredito que o desempenho foi prejudicado pelo descarte, por motivo de missing data, de colunas possivelmente relevantes para o problema. Mantivemos apenas features com porcentagem máxima de missing data  de 50% e imputamos com o valor zero. Outras estratégias de imputação (média, mediana, KNN, entre outras) podem ser investigadas. Além disso, futuras estratégias podem explorar o código postal e outros atributos descartados. Por fim, vale ressaltar que foi possível reduzir o valor do RMSE ao remover instâncias com preço acima de 3000. Porém, acreditamos que esta não é uma estratégia justa, uma vez já havíamos removido os outliers com base no critério do z-score.
