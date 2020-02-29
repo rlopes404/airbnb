@@ -23,6 +23,7 @@ from sklearn.model_selection import GridSearchCV
 
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import Ridge
 
 from sklearn.neighbors import KNeighborsRegressor
 
@@ -47,7 +48,7 @@ y_name = 'price'
 data.head(n=10)
 
 data.shape
-#(33715, 16)
+#(31757, 27)
 
 data.info()
 #name, host_name, neighbourhood, room_type, last_review are not numeric
@@ -58,76 +59,123 @@ data.info()
 #checking duplicate columns
 np.sum(data.duplicated()) == 0
 
+#checking price equals 0
+data = data[data[y_name] > 0]
+
 ##evaluating for missing data
 data.count(axis=0)/len(data)
-#neighbourhood_group 0 -> discard
-#reviews_per_month 0.56 -> imputation?
 
+
+X_train, X_test = train_test_split(data, test_size=0.2, random_state=0)
+X_train, X_valid = train_test_split(X_train, test_size=0.1, random_state=0)
+
+
+
+#### feature engineering
 
 #analysis per neighborhourhood
-data.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=False)
-data.groupby('neighbourhood')[y_name].agg('count').sort_values(ascending=False)
+X_train.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=False)
+X_train.groupby('neighbourhood')[y_name].agg('count').sort_values(ascending=False)
 
 #ploting mean price per neighborhoud
-y = data.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=False).values
+y = X_train.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=False).values
 x = np.array(range(1, len(y)+1))
 plt.plot(x, y, 'ro')
 
-#lets create bins: [0, 250, 500, 1000, 3000, np.inf ] and names = ['b1', 'b2', 'b3', 'b4', 'b5']
-bins = [0, 250, 500, 1000, 3000, np.inf]
-names= ['B250', 'B500', 'B1k', 'B3k', 'BInf']
-neigh_bins = pd.cut(data[y_name], bins, labels=names)
 
-#one-hot encoding
-data = pd.concat([data, pd.get_dummies(neigh_bins, prefix='is')], axis=1)
+labels = data.groupby('neighbourhood')[y_name].agg('median').sort_values(ascending=True).index
+_map = { v: (k+1) for k,v in enumerate(labels)}
+replace_map = {'neighbourhood' : _map}
 
+X_train.replace(replace_map, inplace=True)
+X_valid.replace(replace_map, inplace=True)
+X_test.replace(replace_map, inplace=True)
+
+
+
+# #lets create bins: [0, 250, 500, 1000, 2000, 3000, np.inf ] 
+# bins = [0, 250, 500, 1000, 2000, 3000, np.inf]
+# names= ['B250', 'B500', 'B1k', 'B2k', 'B3k', 'BInf']
+
+
+# #one-hot encoding
+# neigh_bins = pd.cut(X_train[y_name], bins, labels=names)
+# X_train = pd.concat([X_train, pd.get_dummies(neigh_bins, prefix='is')], axis=1)
+
+# neigh_bins = pd.cut(X_valid[y_name], bins, labels=names)
+# X_valid = pd.concat([X_valid, pd.get_dummies(neigh_bins, prefix='is')], axis=1)
+
+# neigh_bins = pd.cut(X_test[y_name], bins, labels=names)
+# X_test = pd.concat([X_test, pd.get_dummies(neigh_bins, prefix='is')], axis=1)
+
+
+#analysis per bed_type
+X_train.groupby('bed_type')[y_name].agg('mean').sort_values(ascending=False)
+X_train.groupby('bed_type')[y_name].agg('count').sort_values(ascending=False)
+
+replace_map = {'bed_type' : {'Futon': 1, 'Pull-out Sofa': 2, 'Airbed': 3, 'Couch': 4, 'Real Bed': 5}}
+X_train.replace(replace_map, inplace=True)
+X_valid.replace(replace_map, inplace=True)
+X_test.replace(replace_map, inplace=True)
+
+#X_train = pd.concat([X_train, pd.get_dummies(X_train['bed_type'], prefix='is')], axis=1)
+#X_valid = pd.concat([X_valid, pd.get_dummies(X_valid['bed_type'], prefix='is')], axis=1)
+#X_test = pd.concat([X_test, pd.get_dummies(X_test['bed_type'], prefix='is')], axis=1)
 
 #analysis per room_type
-data.groupby('room_type')[y_name].agg('mean').sort_values(ascending=False)
-data.groupby('room_type')[y_name].agg('count').sort_values(ascending=False)
+X_train.groupby('room_type')[y_name].agg('mean').sort_values(ascending=False)
+X_train.groupby('room_type')[y_name].agg('count').sort_values(ascending=False)
+
+replace_map = {'room_type' : {'Shared room': 1, 'Private room': 2, 'Hotel room': 3, 'Entire home/apt': 4}}
+X_train.replace(replace_map, inplace=True)
+X_valid.replace(replace_map, inplace=True)
+X_test.replace(replace_map, inplace=True)
 
 #one hot encoding
-data = pd.concat([data, pd.get_dummies(data['room_type'], prefix='is')], axis=1)
+#X_train = pd.concat([X_train, pd.get_dummies(X_train['room_type'], prefix='is')], axis=1)
+#X_valid = pd.concat([X_valid, pd.get_dummies(X_valid['room_type'], prefix='is')], axis=1)
+#X_test = pd.concat([X_test, pd.get_dummies(X_test['room_type'], prefix='is')], axis=1)
 
-#droping non-numeric columns
-df = data.drop(columns=['id', 'name', 'host_id', 'host_name', 'neighbourhood_group', 'last_review', 'reviews_per_month', 'neighbourhood', 'room_type', 'latitude', 'longitude'])
-df.info()
+#droping some columns
+#df = X_train.drop(columns=['id', 'name', 'host_id', 'host_name', 'neighbourhood_group', 'last_review', 'reviews_per_month', 'neighbourhood', 'room_type', 'latitude', 'longitude'])
+#['neighbourhood', 'bed_type', 'room_type']
+cols = ['availability_30', 'availability_60', 'availability_90', 'availability_365', 'maximum_nights']
+X_train.drop(columns=cols, inplace=True)
+X_valid.drop(columns=cols, inplace=True)
+X_test.drop(columns=cols, inplace=True)
+X_train.info()
+
+assert X_train.isna().sum().sum() == 0
+assert X_valid.isna().sum().sum() == 0
+assert X_test.isna().sum().sum() == 0
 
 
 ##  exploring the target variable
-df[y_name].describe()
-#min price: 0 -> discard
-(df[y_name] == 0).sum()
-
-idxs = df[y_name] > 0
-df = df[idxs]
+X_train[y_name].describe()
 #std is high
 
 plt.figure(figsize=(9, 8))
-sns.distplot(df[y_name], color='g', bins=100)
+sns.distplot(X_train[y_name], color='g', bins=100)
 #high skewed
 
-df.boxplot(column=[y_name])
+X_train.boxplot(column=[y_name])
 
-#TODO: several outliers -> remove them
-#idxs = (np.abs(stats.zscore(df['price'])) < 3)
-#df = df[idxs]
+#removing outliers
+idxs = (np.abs(stats.zscore(X_train['price'])) < 3)
+X_train = X_train[idxs]
 
-df.hist(figsize=(12, 8), bins=50)
+X_train.hist(figsize=(12, 8), bins=50)
 
 ### assessing correlation
-sns.heatmap(df.corr(),cmap='BrBG',annot=True)
+#sns.heatmap(df.corr(),cmap='BrBG',annot=True)
 
-df.corr()[y_name]
+X_train.corr()[y_name]
 #some extracted features show higher correlation coeficient than the raw features
+#TODO: remove features with correlation coeficicient values less than 0.01
 
 #pairplot
 #pair_plot = sns.pairplot(df)
 #no others patterns, correlations
-
-
-X_train, X_test = train_test_split(df, test_size=0.2, random_state=0)
-X_train, X_valid = train_test_split(X_train, test_size=0.1, random_state=0)
 
 Y_train = X_train[y_name]
 Y_test = X_test[y_name]
@@ -140,36 +188,34 @@ X_valid.drop(columns=[y_name], inplace=True)
 ### Weakest baseline: mean
 
 MSE = metrics.mean_squared_error(Y_test, np.repeat(np.mean(Y_train), len(Y_test)))
-print('Mean RMSE: %.2f'%(np.sqrt(MSE)))
+print('Mean RMSE: %.2f'%(np.sqrt(MSE))) #1848.13
 
 
-### Linear Regression Raw Features
-cols = ['minimum_nights', 'number_of_reviews', 'calculated_host_listings_count', 'availability_365']
-lr_raw = LinearRegression().fit(X_train[cols], Y_train)
-r2 = lr_raw.score(X_train[cols], Y_train)
-print(r2)
-Y_pred = lr_raw.predict(X_test[cols])
+### Linear Regression
+lr = LinearRegression().fit(X_train, Y_train)
+r2 = lr.score(X_train, Y_train)
+print('%.2f' %(r2)) # / 0.33
+Y_pred = lr.predict(X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('LR Raw RMSE: %.2f' %(np.sqrt(MSE)))
+print('Improved LR RMSE: %.2f' %(np.sqrt(MSE))) #1745.47
 
 ### KNN
 grid_params = {
-            'n_neighbors': [1, 5, 10],
-            'weights': ['uniform', 'distance'],
-            'algorithm': ['ball_tree', 'kd_tree', 'brute']            
-        }
+	'n_neighbors': [1, 5, 10],
+    'weights': ['uniform', 'distance'],            
+}
 
 
-knn = GridSearchCV(estimator=KNeighborsRegressor(), param_grid=grid_params, verbose=1)
+knn = GridSearchCV(estimator=KNeighborsRegressor(), param_grid=grid_params, cv=2)
 grid_results = knn.fit(X_train, Y_train)
 
 Y_pred = knn.predict(X_test)
 RMSE_knn = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('KNN RMSE: %.f' %(RMSE_knn))
+print('KNN RMSE: %.f' %(RMSE_knn)) #1702 
 
 ### Polynomial Linear Regression
 results = []
-for d in range(2,5):
+for d in range(2,4):
     poly = PolynomialFeatures(degree=d, interaction_only=True, include_bias = True)
     X_train_poly = poly.fit_transform(X_train)
     X_valid_poly = poly.fit_transform(X_valid)
@@ -191,45 +237,50 @@ X_test_poly = poly.fit_transform(X_test)
 lr_poly =  LinearRegression().fit(X_train_poly, Y_train)
 r2 = lr_poly.score(X_train_poly, Y_train)
 Y_pred = lr_poly.predict(X_test_poly)
-print(r2)
+print('%.2f' %(r2)) 
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Poly RMSE: %.2f' %(np.sqrt(MSE)))
-
-### Improved Linear Regression
-lr_improved = LinearRegression().fit(X_train, Y_train)
-r2 = lr_improved.score(X_train, Y_train)
-print(r2)
-Y_pred = lr_improved.predict(X_test)
-MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Improved LR RMSE: %.2f' %(np.sqrt(MSE)))
-
+print('Poly RMSE: %.2f' %(np.sqrt(MSE))) #1701.13
 
 ### XGBoost
 grid_params = {
-            'learning_rate': [0.001, 0.01],
-            'n_estimators': [100, 500],
-            'max_depth': [5, 10],
-            'subsample': [0.5, 1.0],
-            'colsample_bytree': [0.5, 1.0],
-            'min_child_weight': [1, 10],
+            'learning_rate': [0.01, 0.1],
+            'n_estimators': [500, 1000],
+            'max_depth': [3, 10],
+            'subsample': [0.8, 1.0],
+            'colsample_bytree': [0.8, 1.0],
             'early_stopping_rounds': [10],
-            'gamma': [0, 1]
+            #'min_child_weight': [1, 10],            
+            #'gamma': [0, 1]
             }
       
-xgb = GridSearchCV(estimator=XGBRegressor(seed=42), cv=2, param_grid=grid_params, verbose=1)
+xgb = GridSearchCV(estimator=XGBRegressor(seed=42), param_grid=grid_params, cv=2, verbose=1)
 xgb.fit(X_train, Y_train)
 
 
+#XGBRegressor(base_score=0.5, booster='gbtree', colsample_bylevel=1,
+             # colsample_bynode=1, colsample_bytree=0.8, early_stopping_rounds=10,
+             # gamma=0, importance_type='gain', learning_rate=0.01,
+             # max_delta_step=0, max_depth=10, min_child_weight=1, missing=None,
+             # n_estimators=500, n_jobs=1, nthread=None, objective='reg:linear',
+             # random_state=0, reg_alpha=0, reg_lambda=1, scale_pos_weight=1,
+             # seed=42, silent=None, subsample=0.8, verbosity=1)
+
+
 #model = XGBRegressor(learning_rate = 0.1, n_estimators=1000, max_depth=3, subsample=0.8, colsample_bytree=1, gamma= 1, seed=42)         
-#model.fit(X_train, Y_train, eval_metric="rmse", eval_set=[(X_train, Y_train), (X_valid, Y_valid)],  verbose=True, early_stopping_rounds = 10)
+#model.fit(X_train, Y_train, eval_metric="rmse", eva_lset=[(X_train, Y_train), (X_valid, Y_valid)],  verbose=True, early_stopping_rounds = 10)
 
 Y_pred = xgb.predict(X_test)
 RMSE_xgb = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('XGB RMSE: %.f' %(RMSE_xgb))
+print('XGB RMSE: %.2f' %(RMSE_xgb))
+
+idx = np.argsort(xgb.best_estimator_.feature_importances_)[-5:]
+
+labels = X_train.columns[idx]
+values = np.sort(xgb.best_estimator_.feature_importances_)[-5:]
+plt.bar(labels, values)
+plt.show()
 
 ### stacking manual
-
-
 X_valid_poly = poly.fit_transform(X_valid)
 lrp_y_pred = lr_poly.predict(X_valid_poly).reshape(-1,1)
 knn_y_pred = knn.predict(X_valid).reshape(-1,1)
@@ -248,7 +299,7 @@ _X_test = np.concatenate([xgb_y_pred, knn_y_pred, lrp_y_pred], axis=1)
 
 Y_pred = _lr.predict(_X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Improved LR RMSE: %.2f' %(np.sqrt(MSE)))
+print('Stacking manual RMSE: %.2f' %(np.sqrt(MSE)))
 
 ### Stacking
 estimators = [('knn', knn), ('lr_poly', lr_poly), ('xgb', xgb)]
@@ -265,17 +316,17 @@ X_valid_poly = poly.fit_transform(X_valid)
 X_test_poly = poly.fit_transform(X_test)
 
 grid_params = {
-            'learning_rate': [0.01, 0.05, 0.1],
-            'n_estimators': [100, 500, 1000],
-            'max_depth': [2, 6, 10],
-            'subsample': [0.3, 0.7, 1.0],
-            'colsample_bytree': [0.3, 0.7, 1.0],
-            'min_child_weight': [1, 10, 100],
-            'early_stopping_rounds': [10],
-            'gamma': [0, 1, 5]
-            }
+	'learning_rate': [0.01, 0.1],
+	'n_estimators': [500, 1000],
+	'max_depth': [3, 10],
+	'subsample': [0.8, 1.0],
+	'colsample_bytree': [0.8, 1.0],
+	'early_stopping_rounds': [10],
+	#'min_child_weight': [1, 10],            
+	#'gamma': [0, 1]
+}
       
-grid = GridSearchCV(estimator=XGBRegressor(seed=42), param_grid=grid_params)
+grid = GridSearchCV(estimator=XGBRegressor(seed=42), param_grid=grid_params, cv=2)
 grid.fit(X_train_poly, Y_train)
 
 
@@ -284,7 +335,7 @@ grid.fit(X_train_poly, Y_train)
 
 Y_pred = grid.predict(X_test_poly)
 RMSE_xgb = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('RMSE_xgb: %.f' %(RMSE_xgb))
+print('RMSE_xgb: %.f' %(RMSE_xgb)) #1666
 
 
 
