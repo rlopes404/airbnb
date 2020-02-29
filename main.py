@@ -277,20 +277,20 @@ plt.bar(labels, values)
 plt.show()
 
 ### stacking manual
-X_valid_poly = poly.fit_transform(X_valid)
-lrp_y_pred = lr_poly.predict(X_valid_poly).reshape(-1,1)
+#X_valid_poly = poly.fit_transform(X_valid)
+lr_y_pred = lr.predict(X_valid).reshape(-1,1)
 knn_y_pred = knn.predict(X_valid).reshape(-1,1)
 xgb_y_pred = xgb.predict(X_valid).reshape(-1,1)
 
-_X_train = np.concatenate([xgb_y_pred, knn_y_pred, lrp_y_pred], axis=1)
+_X_train = np.concatenate([xgb_y_pred, knn_y_pred, lr_y_pred], axis=1)
 
 _lr = LinearRegression().fit(_X_train, Y_valid)
 
-X_test_poly = poly.fit_transform(X_test)
-lrp_y_pred = lr_poly.predict(X_test_poly).reshape(-1,1)
+#X_test_poly = poly.fit_transform(X_test)
+lr_y_pred = lr.predict(X_test).reshape(-1,1)
 knn_y_pred = knn.predict(X_test).reshape(-1,1)
 xgb_y_pred = xgb.predict(X_test).reshape(-1,1)
-_X_test = np.concatenate([xgb_y_pred, knn_y_pred, lrp_y_pred], axis=1)
+_X_test = np.concatenate([xgb_y_pred, knn_y_pred, lr_y_pred], axis=1)
 
 
 Y_pred = _lr.predict(_X_test)

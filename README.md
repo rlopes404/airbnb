@@ -43,7 +43,7 @@ Para validar o modelo, utilzamos a técnica Random Train/Test Split onde o conju
 
 ## Quais evidências você possui de que seu modelo é suficientemente bom?
 
-A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseline mais fraco, que consiste em prever constamente a média, apresenta um RMSE 18.41% superior ao nosso melhor algoritmo, a saber, obtido por meio da técnica Stacking Ensemble. Pode-se concluir que a introdução de features polinomiais melhora o desempenho do algortimo Regressão Linear. Porém, pode-se concluir que a Regressão Linear Polinomial fornece um resultado praticamente igual ao método KNN. Por fim, o algoritmo GB fornece RMSE 2.12% superior ao Stacking. Analisando o nosso melhor método, os algortimos GB, KNN e Regressão Linear Polinomial contribuíram respectivamente para 88%, 9% e 1% da predição final. 
+A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseline mais fraco, que consiste em prever constamente a média, apresenta um RMSE 18.41% superior ao nosso melhor algoritmo, a saber, obtido por meio da técnica Stacking Ensemble. Pode-se concluir que a introdução de features polinomiais não melhora o desempenho do algortimo Regressão Linear. O algoritmo KNN apresentou resultados superiores àqueles fornecidos pela Regressão Linear. Por fim, o algoritmo GB apresenta RMSE 3.23% superior ao Stacking.
 
 |  Método | RMSE  |
 | ------------ | ------------ |
