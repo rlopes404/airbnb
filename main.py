@@ -62,6 +62,11 @@ np.sum(data.duplicated()) == 0
 #checking price equals 0
 data = data[data[y_name] > 0]
 
+data = data[data['beds'] != 0]
+data = data[data['bedrooms'] != 0]
+data = data[data['accommodates'] != 0]
+
+
 ##evaluating for missing data
 data.count(axis=0)/len(data)
 
@@ -139,7 +144,7 @@ X_test.replace(replace_map, inplace=True)
 #droping some columns
 #df = X_train.drop(columns=['id', 'name', 'host_id', 'host_name', 'neighbourhood_group', 'last_review', 'reviews_per_month', 'neighbourhood', 'room_type', 'latitude', 'longitude'])
 #['neighbourhood', 'bed_type', 'room_type']
-cols = ['availability_30', 'availability_60', 'availability_90', 'availability_365', 'maximum_nights']
+cols = ['availability_30', 'availability_60', 'availability_90', 'availability_365', 'maximum_nights', 'first_review']
 X_train.drop(columns=cols, inplace=True)
 X_valid.drop(columns=cols, inplace=True)
 X_test.drop(columns=cols, inplace=True)
@@ -188,7 +193,7 @@ X_valid.drop(columns=[y_name], inplace=True)
 ### Weakest baseline: mean
 
 MSE = metrics.mean_squared_error(Y_test, np.repeat(np.mean(Y_train), len(Y_test)))
-print('Mean RMSE: %.2f'%(np.sqrt(MSE))) #1848.13
+print('Mean RMSE: %.2f'%(np.sqrt(MSE))) #1752.62
 
 
 ### Linear Regression
@@ -197,7 +202,7 @@ r2 = lr.score(X_train, Y_train)
 print('%.2f' %(r2)) # / 0.33
 Y_pred = lr.predict(X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Improved LR RMSE: %.2f' %(np.sqrt(MSE))) #1745.47
+print('Improved LR RMSE: %.2f' %(np.sqrt(MSE))) #1671.12
 
 ### KNN
 grid_params = {
@@ -211,11 +216,11 @@ grid_results = knn.fit(X_train, Y_train)
 
 Y_pred = knn.predict(X_test)
 RMSE_knn = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('KNN RMSE: %.f' %(RMSE_knn)) #1702 
+print('KNN RMSE: %.f' %(RMSE_knn)) #1590 
 
 ### Polynomial Linear Regression
 results = []
-for d in range(2,4):
+for d in range(2,3):
     poly = PolynomialFeatures(degree=d, interaction_only=True, include_bias = True)
     X_train_poly = poly.fit_transform(X_train)
     X_valid_poly = poly.fit_transform(X_valid)
@@ -239,7 +244,7 @@ r2 = lr_poly.score(X_train_poly, Y_train)
 Y_pred = lr_poly.predict(X_test_poly)
 print('%.2f' %(r2)) 
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Poly RMSE: %.2f' %(np.sqrt(MSE))) #1701.13
+print('Poly RMSE: %.2f' %(np.sqrt(MSE))) #1691.55
 
 ### XGBoost
 grid_params = {
@@ -257,13 +262,14 @@ xgb = GridSearchCV(estimator=XGBRegressor(seed=42), param_grid=grid_params, cv=2
 xgb.fit(X_train, Y_train)
 
 
-#XGBRegressor(base_score=0.5, booster='gbtree', colsample_bylevel=1,
-             # colsample_bynode=1, colsample_bytree=0.8, early_stopping_rounds=10,
-             # gamma=0, importance_type='gain', learning_rate=0.01,
-             # max_delta_step=0, max_depth=10, min_child_weight=1, missing=None,
-             # n_estimators=500, n_jobs=1, nthread=None, objective='reg:linear',
-             # random_state=0, reg_alpha=0, reg_lambda=1, scale_pos_weight=1,
-             # seed=42, silent=None, subsample=0.8, verbosity=1)
+# <bound method XGBModel.get_params of XGBRegressor(base_score=0.5, booster='gbtree', colsample_bylevel=1,
+#              colsample_bynode=1, colsample_bytree=0.8, early_stopping_rounds=10,
+#              gamma=0, importance_type='gain', learning_rate=0.1,
+#              max_delta_step=0, max_depth=3, min_child_weight=1, missing=None,
+#              n_estimators=500, n_jobs=1, nthread=None, objective='reg:linear',
+#              random_state=0, reg_alpha=0, reg_lambda=1, scale_pos_weight=1,
+#              seed=42, silent=None, subsample=1.0, verbosity=1)>
+
 
 
 #model = XGBRegressor(learning_rate = 0.1, n_estimators=1000, max_depth=3, subsample=0.8, colsample_bytree=1, gamma= 1, seed=42)         
@@ -271,7 +277,7 @@ xgb.fit(X_train, Y_train)
 
 Y_pred = xgb.predict(X_test)
 RMSE_xgb = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('XGB RMSE: %.2f' %(RMSE_xgb))
+print('XGB RMSE: %.2f' %(RMSE_xgb)) #1528.02
 
 idx = np.argsort(xgb.best_estimator_.feature_importances_)[-5:]
 
@@ -299,7 +305,7 @@ _X_test = np.concatenate([xgb_y_pred, knn_y_pred, lrp_y_pred], axis=1)
 
 Y_pred = _lr.predict(_X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Stacking manual RMSE: %.2f' %(np.sqrt(MSE)))
+print('Stacking manual RMSE: %.2f' %(np.sqrt(MSE))) #1480.10
 
 ### Stacking
 estimators = [('knn', knn), ('lr_poly', lr_poly), ('xgb', xgb)]
@@ -307,7 +313,7 @@ reg = StackingRegressor(estimators=estimators)
 reg.fit(X_test, Y_test)
 Y_pred = reg.predict(X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Stacking RMSE: %.2f' %(np.sqrt(MSE)))
+print('Stacking RMSE: %.2f' %(np.sqrt(MSE))) 
 
 ### XGBoost Poly
 poly = PolynomialFeatures(degree=2, interaction_only=True, include_bias = True)
