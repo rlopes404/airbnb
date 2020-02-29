@@ -75,6 +75,9 @@ X_train, X_test = train_test_split(data, test_size=0.2, random_state=0)
 X_train, X_valid = train_test_split(X_train, test_size=0.1, random_state=0)
 
 
+plt.hist(X_train['review_scores_rating'])
+plt.title('Review Scores Rating')
+plt.show()
 
 #### feature engineering
 

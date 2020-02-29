@@ -46,6 +46,6 @@ A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseli
 | GB | 1528.02 (3.23%) |
 | Stacking | 1480.10 |
 
-Em problemas de regressão, apesar de inalcançável, zero é o RMSE ideal. Claramente o melhor RMSE obtido, igual a 1625.21, está longe de zero. Ao analisar estatísticas da variável preço, verifica-se que, mesmo após a remoção de outliers, há uma grande amplitude,  a saber, igual 5500 em que os valores mínimo e máximo são iguais a 29 e 5579, respectivamente.
+Em problemas de regressão, apesar de inalcançável, zero é o RMSE ideal. Claramente o melhor RMSE obtido, igual a 1480.10, está longe de zero. Ao analisar estatísticas da variável preço, verifica-se que, mesmo após a remoção de outliers, há uma grande amplitude,  a saber, igual 5702 em que os valores mínimo e máximo são iguais a 29 e 5731, respectivamente. Além disso, há o desvio padrão é igual a 690.52.
 
-Acredito que o desempenho foi prejudicado pelo descarte, por motivo de missing data, de colunas possivelmente relevantes para o problema. Mantivemos apenas features com porcentagem máxima de missing data  de 50% e imputamos com o valor zero. Outras estratégias de imputação (média, mediana, KNN, entre outras) podem ser investigadas.
+Acredito que o desempenho foi prejudicado pelo descarte, por motivo de missing data, de colunas possivelmente relevantes para o problema. Mantivemos apenas features com porcentagem máxima de missing data  de 50% e imputamos com o valor zero. Outras estratégias de imputação (média, mediana, KNN, entre outras) podem ser investigadas. Além disso, futuras estratégias podem explorar o código postal e outros atributos descartados.
