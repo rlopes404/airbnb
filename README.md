@@ -2,8 +2,10 @@
 
 Todos os algoritmos foram implementados em Python, utilizando pacotes numpy, pandas, scikit-learn e xgboost.
 
-Dataset utilizado: listings.csv.gz, 22 de November, 2019
-Dataset disponível em: http://insideairbnb.com/get-the-data.html
+Dataset:
+- Dataset utilizado: listings.csv.gz, 22 de November, 2019
+
+- Dataset disponível em [Link](http://insideairbnb.com/get-the-data.html)
 
 ## Como foi a definição da sua estratégia de modelagem?
 
