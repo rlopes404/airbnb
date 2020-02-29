@@ -7,15 +7,14 @@ Todos os algoritmos foram implementados em Python, utilizando pacotes numpy, pan
 Após fazer um tratamento do dataset, por exemplo, remoção de missing data, imputação de dados, a base de dados foi particionada em treino, validação e teste. No conjunto de treino, iniciou-se a análise exploratória de dados que resultou na criação de features com base em hipóteses:
 
 - Acredita-se que o atributo nominal 'neighbourhood' influencia o preço, dado que reigões mais nobres tendem a ter um preço elevado. Para esse fim, os dados foram agrupados em função do atributo e a média de cada grupo foi obtida. Em seguida, as médias foram ordenadas e, então, um valor númerico atríbuido a uma entrada  foi definido como a posição no vetor ordenado. Deste modo, transformou-se o atributo nominal textual em um atributo numérico ordinal. Uma alternativa seria executar um algoritmo de clusterização (k-means ou hierarchical clustering) para definir os rótulos.
-- Acredita-se que os atributos nominais 'bed_type' e 'room_type' influenciam o preço. Por exemplo, um sofá fornece gerelmente um conforto inferior comparado a uma cama, impactando, então, o preço; um quaro privativo, por sua vez, geralmente é mais caro comparado a um quarto coletivo. Portanto, foram criados  atributos numéricos com uma faixa de valores para modelar esso conceito ordinal; estratégia similar àquela usada no atributo 'neighbourhood', descrito anteriormente. Além dessa estratégia, tentamos a estratégia one-hot encoding. Contudo, o aumento no número de atributos tornou o treinamento lento. A tabela abaixo ilustra o preço médio por 'bed_type':
+- Acredita-se que os atributos nominais 'bed_type' e 'room_type' influenciam o preço. Por exemplo, um sofá fornece gerelmente um conforto inferior comparado a uma cama, impactando, então, o preço; um quaro privativo, por sua vez, geralmente é mais caro comparado a um quarto coletivo. Portanto, foram criados  atributos numéricos com uma faixa de valores para modelar esso conceito ordinal; estratégia similar àquela usada no atributo 'neighbourhood', descrito anteriormente. Além dessa estratégia, tentamos a estratégia one-hot encoding. Contudo, o aumento no número de atributos tornou o treinamento lento. A tabela abaixo ilustra o preço médio por 'room_type':
 
 |  Tipo | Preço  |
 | ----- | ------ |
-| Real Bed  | 679.28 |
-| Couch | 581.40 |
-| Airbed   |  401.44  |
-| Pull-out Sofa | 394.31 | 
-| Futon | 308.92 |
+| Entire home/apt   | 838.34 |
+| Hotel room  | 704.67 |
+| Private room   |  269.81 |
+| Shared room |  251.66 | 
 
 - O atributo 'amenities', que é uma lista de palavras, representa comodidades que a hospdagem possui. Portanto, criou-se uma feature que consiste no número de amenities que a hospedagem fornece. Este novo atributo baseia-se na hipótese de que o preço é diretamente proporcional ao número de comodidades.
 
@@ -57,4 +56,4 @@ A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseli
 
 Em problemas de regressão, apesar de inalcançável, zero é o RMSE ideal. Claramente o melhor RMSE obtido, igual a 1480.10, está longe de zero. Ao analisar estatísticas da variável preço, verifica-se que, mesmo após a remoção de outliers, há uma grande amplitude,  a saber, igual 5702 em que os valores mínimo e máximo são iguais a 29 e 5731, respectivamente. Além disso, há o desvio padrão é igual a 690.52.
 
-Acredito que o desempenho foi prejudicado pelo descarte, por motivo de missing data, de colunas possivelmente relevantes para o problema. Mantivemos apenas features com porcentagem máxima de missing data  de 50% e imputamos com o valor zero. Outras estratégias de imputação (média, mediana, KNN, entre outras) podem ser investigadas. Além disso, futuras estratégias podem explorar o código postal e outros atributos descartados.
+Acredito que o desempenho foi prejudicado pelo descarte, por motivo de missing data, de colunas possivelmente relevantes para o problema. Mantivemos apenas features com porcentagem máxima de missing data  de 50% e imputamos com o valor zero. Outras estratégias de imputação (média, mediana, KNN, entre outras) podem ser investigadas. Além disso, futuras estratégias podem explorar o código postal e outros atributos descartados. Por fim, vale ressaltar que foi possível reduzir o valor do RMSE ao remover instâncias com preço acima de 3000. Porém, acreditamos que esta não é uma estratégia justa, uma vez já havíamos removido os outliers com base no critério do z-score.
