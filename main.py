@@ -305,46 +305,38 @@ print('Stacking manual MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
 
 coef = _lr.coef_/np.sum(_lr.coef_)
 
-### Stacking
-estimators = [('knn', knn), ('lr_poly', lr_poly), ('xgb', xgb)]
-reg = StackingRegressor(estimators=estimators)
-reg.fit(X_test, Y_test)
-Y_pred = reg.predict(X_test)
-MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Stacking RMSE: %.2f' %(np.sqrt(MSE))) 
+# ### Stacking
+# estimators = [('knn', knn), ('lr_poly', lr_poly), ('xgb', xgb)]
+# reg = StackingRegressor(estimators=estimators)
+# reg.fit(X_test, Y_test)
+# Y_pred = reg.predict(X_test)
+# MSE = metrics.mean_squared_error(Y_test, Y_pred)
+# print('Stacking RMSE: %.2f' %(np.sqrt(MSE))) 
 
-### XGBoost Poly
-poly = PolynomialFeatures(degree=2, interaction_only=True, include_bias = True)
-X_train_poly = poly.fit_transform(X_train)
-X_valid_poly = poly.fit_transform(X_valid)
-X_test_poly = poly.fit_transform(X_test)
+# ### XGBoost Poly
+# poly = PolynomialFeatures(degree=2, interaction_only=True, include_bias = True)
+# X_train_poly = poly.fit_transform(X_train)
+# X_valid_poly = poly.fit_transform(X_valid)
+# X_test_poly = poly.fit_transform(X_test)
 
-grid_params = {
-	'learning_rate': [0.01, 0.1],
-	'n_estimators': [500, 1000],
-	'max_depth': [3, 10],
-	'subsample': [0.8, 1.0],
-	'colsample_bytree': [0.8, 1.0],
-	'early_stopping_rounds': [10],
-	#'min_child_weight': [1, 10],            
-	#'gamma': [0, 1]
-}
+# grid_params = {
+# 	'learning_rate': [0.01, 0.1],
+# 	'n_estimators': [500, 1000],
+# 	'max_depth': [3, 10],
+# 	'subsample': [0.8, 1.0],
+# 	'colsample_bytree': [0.8, 1.0],
+# 	'early_stopping_rounds': [10],
+# 	#'min_child_weight': [1, 10],            
+# 	#'gamma': [0, 1]
+# }
       
-grid = GridSearchCV(estimator=XGBRegressor(seed=42), param_grid=grid_params, cv=2)
-grid.fit(X_train_poly, Y_train)
+# grid = GridSearchCV(estimator=XGBRegressor(seed=42), param_grid=grid_params, cv=2)
+# grid.fit(X_train_poly, Y_train)
 
 
-#model = XGBRegressor(learning_rate = 0.1, n_estimators=1000, max_depth=3, subsample=0.8, colsample_bytree=1, gamma= 1, seed=42)         
-#model.fit(X_train, Y_train, eval_metric="rmse", eval_set=[(X_train, Y_train), (X_valid, Y_valid)],  verbose=True, early_stopping_rounds = 10)
+# #model = XGBRegressor(learning_rate = 0.1, n_estimators=1000, max_depth=3, subsample=0.8, colsample_bytree=1, gamma= 1, seed=42)         
+# #model.fit(X_train, Y_train, eval_metric="rmse", eval_set=[(X_train, Y_train), (X_valid, Y_valid)],  verbose=True, early_stopping_rounds = 10)
 
-Y_pred = grid.predict(X_test_poly)
-RMSE_xgb = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('RMSE_xgb: %.f' %(RMSE_xgb)) #1666
-
-
-
-#http://rasbt.github.io/mlxtend/user_guide/regressor/StackingRegressor/
-#https://stackoverflow.com/questions/51194303/how-to-run-a-python-script-in-a-py-file-from-a-google-colab-notebook
-#https://machinelearningmastery.com/stacking-ensemble-for-deep-learning-neural-networks/
-
-#https://towardsdatascience.com/feature-engineering-for-machine-learning-3a5e293a5114
+# Y_pred = grid.predict(X_test_poly)
+# RMSE_xgb = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
+# print('RMSE_xgb: %.f' %(RMSE_xgb)) #1666
