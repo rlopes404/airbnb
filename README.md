@@ -24,7 +24,7 @@ Após fazer um tratamento do dataset, por exemplo, remoção de missing data, im
 
 Vale ressaltar que neste projeto, descartamos os campos de texto corrido tais como 'Summary', Standard', entre outros. Nesse caso, é possível realizar análise de sentimento sobre texto ou extrair features bag-of-words após eliminar stop words. Essas features podem aumentar o poder preditivo dos modelos.
 
-Em seguida, foi avaliada a correlação linear de Pearson entre as features e o preço. Dentre as variáveis tratadas ou criadas, as variáveis 'room_type', 'bed_type' e 'neighbourhood' apresentaram coeficientes de correlação iguais a 0.25, 0.03 e 0.23, respectivamente. Por fim, outliers foram removidos do treino com base no critério do valor absoluto do z-score ser maior ou igual a três unidades. Features com coeficiente de correlação inferior a 0.01 foram removidas do modelo. Ao total, há 26 features.
+Em seguida, foi avaliada a correlação linear de Pearson entre as features e o preço. Dentre as variáveis tratadas ou criadas, as variáveis 'room_type', 'bed_type' e 'neighbourhood' apresentaram coeficientes de correlação iguais a 0.25, 0.03 e 0.23, respectivamente. Por fim, outliers foram removidos do treino caseo o valor absoluto do z-score seja supoerior a 2 unidades de desvio padrão. Features com coeficiente de correlação inferior a 0.01 foram removidas do modelo. Ao total, há 26 features.
 
 
 ## Como foi definida a função de custo utilizada?
