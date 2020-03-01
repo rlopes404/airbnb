@@ -5,8 +5,6 @@ Created on Fri Feb 28 06:28:50 2020
 
 @author: ramon
 """
-#TODO: latitude, longitude,
-
 import pandas as pd
 import numpy as np
 np.random.seed(0)
@@ -35,6 +33,8 @@ from xgboost import plot_importance
 from sklearn.ensemble import StackingRegressor
 
 
+to_plot = False
+
 ## load data
 name = 'data.csv'
 data = pd.read_csv(name, sep=',', header=0)
@@ -43,9 +43,6 @@ y_name = 'price'
 data.head(n=10)
 
 data.shape
-
-
-
 
 #checking duplicate columns
 np.sum(data.duplicated()) == 0
@@ -63,30 +60,13 @@ data.count(axis=0)/len(data)
 X_train, X_test = train_test_split(data, test_size=0.2, random_state=0)
 X_train, X_valid = train_test_split(X_train, test_size=0.1, random_state=0)
 
-plt.hist(X_train['price'])
-plt.title('Price')
-plt.savefig('hist-price.png')
 
-plt.hist(X_train['price'].apply(math.log))
-plt.title('Log Price')
-plt.savefig('hist-price-log.png')
-
-plt.hist(X_train['review_scores_rating'])
-plt.title('Review Scores Rating')
-plt.savefig('hist-review-scores-rating.png')
 
 #### feature engineering
 
 #analysis per neighborhourhood
 X_train.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=False)
 X_train.groupby('neighbourhood')[y_name].agg('count').sort_values(ascending=False)
-
-#ploting mean price per neighborhoud
-y = X_train.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=False).values
-x = np.array(range(1, len(y)+1))
-plt.plot(x, y, 'ro')
-plt.title('Price per neighborhood')
-plt.savefig('plot-price-neighborhood')
 
 
 labels = data.groupby('neighbourhood')[y_name].agg('median').sort_values(ascending=True).index
@@ -139,35 +119,53 @@ assert X_valid.isna().sum().sum() == 0
 assert X_test.isna().sum().sum() == 0
 
 
+if to_plot:
+    plt.hist(X_train['price'])
+    plt.title('Price')
+    plt.savefig('hist-price.png')
+
+    plt.hist(X_train['price'].apply(math.log))
+    plt.title('Log Price')
+    plt.savefig('hist-price-log.png')
+
+    plt.hist(X_train['review_scores_rating'])
+    plt.title('Review Scores Rating')
+    plt.savefig('hist-review-scores-rating.png')
+    
+    #ploting mean price per neighborhoud
+    y = X_train.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=False).values
+    x = np.array(range(1, len(y)+1))
+    plt.plot(x, y, 'ro')
+    plt.title('Price per neighborhood')
+    plt.savefig('plot-price-neighborhood')
+
+
+    #pairplot
+    corrs = X_train.corr()[y_name].apply(abs)
+    labels = corrs[corrs > 0.3].index
+
+    _df = X_train.copy()
+    _labels = list(labels)
+    _labels.append('price_log')
+    _df['price_log'] = _df['price'].apply(math.log)
+    pair_plot = sns.pairplot(_df, vars=_labels)
+    pair_plot.savefig("pairplot.png")
+
+    plt.figure(figsize=(9, 8))
+    sns.distplot(X_train[y_name], color='g', bins=100)
+    #X_train.boxplot(column=[y_name])
+
+    ### assessing correlation
+    #sns.heatmap(df.corr(),cmap='BrBG',annot=True)
+
 ##  exploring the target variable
 X_train[y_name].describe()
 #std is high
 
-plt.figure(figsize=(9, 8))
-sns.distplot(X_train[y_name], color='g', bins=100)
-#high skewed
-
-#X_train.boxplot(column=[y_name])
 
 #removing outliers whose the absolute value of their z score values are greater than threshold
 idxs = (np.abs(stats.zscore(X_train['price'])) <= 2)
 X_train = X_train[idxs]
-
-X_train.hist(figsize=(12, 8), bins=50)
-
-### assessing correlation
-#sns.heatmap(df.corr(),cmap='BrBG',annot=True)
-
-#pairplot
-corrs = X_train.corr()[y_name].apply(abs)
-labels = corrs[corrs > 0.3].index
-
-_df = X_train.copy()
-_labels = list(labels)
-_labels.append('price_log')
-_df['price_log'] = _df['price'].apply(math.log)
-pair_plot = sns.pairplot(_df, vars=_labels)
-pair_plot.savefig("pairplot.png")
 
 Y_train = X_train[y_name]
 Y_test = X_test[y_name]
@@ -177,10 +175,16 @@ X_train.drop(columns=[y_name], inplace=True)
 X_test.drop(columns=[y_name], inplace=True)
 X_valid.drop(columns=[y_name], inplace=True)
 
+
+def MAPE(y_true, y_pred):
+    return np.mean(np.abs((y_true - y_pred)/y_true))*100
+
 ### Weakest baseline: mean
 
-MSE = metrics.mean_squared_error(Y_test, np.repeat(np.mean(Y_train), len(Y_test)))
+Y_pred = np.repeat(np.mean(Y_train), len(Y_test))
+MSE = metrics.mean_squared_error(Y_test, Y_pred)
 print('Mean RMSE: %.2f'%(np.sqrt(MSE))) #1755.09
+print('Mean MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
 
 
 ### Linear Regression
@@ -189,7 +193,9 @@ r2 = lr.score(X_train, Y_train)
 print('%.2f' %(r2)) # / 0.33
 Y_pred = lr.predict(X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Improved LR RMSE: %.2f' %(np.sqrt(MSE))) #1660.37
+print('LR RMSE: %.2f' %(np.sqrt(MSE))) #1660.37
+print('LR MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
+
 
 ### KNN
 grid_params = {
@@ -204,6 +210,7 @@ grid_results = knn.fit(X_train, Y_train)
 Y_pred = knn.predict(X_test)
 RMSE_knn = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
 print('KNN RMSE: %.2f' %(RMSE_knn)) #1617.08 
+print('KNN MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
 
 ### Polynomial Linear Regression
 results = []
@@ -231,7 +238,8 @@ r2 = lr_poly.score(X_train_poly, Y_train)
 Y_pred = lr_poly.predict(X_test_poly)
 print('%.2f' %(r2)) 
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Poly RMSE: %.2f' %(np.sqrt(MSE))) #
+print('Poly RMSE: %.2f' %(np.sqrt(MSE)))
+print('Poly MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
 
 ### XGBoost
 grid_params = {
@@ -265,6 +273,7 @@ xgb.fit(X_train, Y_train)
 Y_pred = xgb.predict(X_test)
 RMSE_xgb = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
 print('XGB RMSE: %.2f' %(RMSE_xgb)) #1555.91
+print('XGB MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
 
 idx = np.argsort(xgb.best_estimator_.feature_importances_)[-5:]
 
@@ -274,7 +283,6 @@ plt.bar(labels, values)
 plt.show()
 
 ### stacking manual
-#X_valid_poly = poly.fit_transform(X_valid)
 lr_y_pred = lr.predict(X_valid).reshape(-1,1)
 knn_y_pred = knn.predict(X_valid).reshape(-1,1)
 xgb_y_pred = xgb.predict(X_valid).reshape(-1,1)
@@ -283,7 +291,7 @@ _X_train = np.concatenate([xgb_y_pred, knn_y_pred, lr_y_pred], axis=1)
 
 _lr = LinearRegression().fit(_X_train, Y_valid)
 
-#X_test_poly = poly.fit_transform(X_test)
+
 lr_y_pred = lr.predict(X_test).reshape(-1,1)
 knn_y_pred = knn.predict(X_test).reshape(-1,1)
 xgb_y_pred = xgb.predict(X_test).reshape(-1,1)
@@ -293,6 +301,8 @@ _X_test = np.concatenate([xgb_y_pred, knn_y_pred, lr_y_pred], axis=1)
 Y_pred = _lr.predict(_X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
 print('Stacking manual RMSE: %.2f' %(np.sqrt(MSE))) #1503.61
+print('Stacking manual MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
+
 coef = _lr.coef_/np.sum(_lr.coef_)
 
 ### Stacking
