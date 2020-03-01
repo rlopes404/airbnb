@@ -11,6 +11,8 @@ import pandas as pd
 import numpy as np
 np.random.seed(0)
 
+import math
+
 from scipy import stats
 
 import matplotlib.pyplot as plt
@@ -33,39 +35,26 @@ from xgboost import plot_importance
 from sklearn.ensemble import StackingRegressor
 
 
-#Previsão do preço da estadia (feature ‘price’)
-#Classificação do room type (feature ‘room_type’)
-
-#Faça uma análise exploratória para avaliar a consistência dos dados
-#e identificar possíveis variáveis que impactam sua variável resposta
-
 ## load data
 name = 'data.csv'
 data = pd.read_csv(name, sep=',', header=0)
 y_name = 'price'
 
-##exploring the dataset
 data.head(n=10)
 
 data.shape
-#(31757, 27)
 
-data.info()
-#name, host_name, neighbourhood, room_type, last_review are not numeric
-#missing data: neighbourhood_group, last_review, reviews_per_month
-#to keep: neibhourhood, room_type, last_review
-#discard: id, name, host_id, host_name
+
+
 
 #checking duplicate columns
 np.sum(data.duplicated()) == 0
 
 #checking price equals 0
 data = data[data[y_name] > 0]
-
 data = data[data['beds'] != 0]
 data = data[data['bedrooms'] != 0]
 data = data[data['accommodates'] != 0]
-
 
 ##evaluating for missing data
 data.count(axis=0)/len(data)
@@ -74,14 +63,17 @@ data.count(axis=0)/len(data)
 X_train, X_test = train_test_split(data, test_size=0.2, random_state=0)
 X_train, X_valid = train_test_split(X_train, test_size=0.1, random_state=0)
 
+plt.hist(X_train['price'])
+plt.title('Price')
+plt.savefig('hist-price.png')
 
 plt.hist(X_train['price'].apply(math.log))
 plt.title('Log Price')
-plt.show()
+plt.savefig('hist-price-log.png')
 
 plt.hist(X_train['review_scores_rating'])
 plt.title('Review Scores Rating')
-plt.show()
+plt.savefig('hist-review-scores-rating.png')
 
 #### feature engineering
 
@@ -93,6 +85,8 @@ X_train.groupby('neighbourhood')[y_name].agg('count').sort_values(ascending=Fals
 y = X_train.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=False).values
 x = np.array(range(1, len(y)+1))
 plt.plot(x, y, 'ro')
+plt.title('Price per neighborhood')
+plt.savefig('plot-price-neighborhood')
 
 
 labels = data.groupby('neighbourhood')[y_name].agg('median').sort_values(ascending=True).index
@@ -153,10 +147,10 @@ plt.figure(figsize=(9, 8))
 sns.distplot(X_train[y_name], color='g', bins=100)
 #high skewed
 
-X_train.boxplot(column=[y_name])
+#X_train.boxplot(column=[y_name])
 
-#removing outliers
-idxs = (np.abs(stats.zscore(X_train['price'])) < 3)
+#removing outliers whose the absolute value of their z score values are greater than threshold
+idxs = (np.abs(stats.zscore(X_train['price'])) <= 2)
 X_train = X_train[idxs]
 
 X_train.hist(figsize=(12, 8), bins=50)
@@ -164,13 +158,16 @@ X_train.hist(figsize=(12, 8), bins=50)
 ### assessing correlation
 #sns.heatmap(df.corr(),cmap='BrBG',annot=True)
 
-X_train.corr()[y_name]
-#some extracted features show higher correlation coeficient than the raw features
-#TODO: remove features with correlation coeficicient values less than 0.01
-
 #pairplot
-#pair_plot = sns.pairplot(df)
-#no others patterns, correlations
+corrs = X_train.corr()[y_name].apply(abs)
+labels = corrs[corrs > 0.3].index
+
+_df = X_train.copy()
+_labels = list(labels)
+_labels.append('price_log')
+_df['price_log'] = _df['price'].apply(math.log)
+pair_plot = sns.pairplot(_df, vars=_labels)
+pair_plot.savefig("pairplot.png")
 
 Y_train = X_train[y_name]
 Y_test = X_test[y_name]
@@ -183,7 +180,7 @@ X_valid.drop(columns=[y_name], inplace=True)
 ### Weakest baseline: mean
 
 MSE = metrics.mean_squared_error(Y_test, np.repeat(np.mean(Y_train), len(Y_test)))
-print('Mean RMSE: %.2f'%(np.sqrt(MSE))) #1752.62
+print('Mean RMSE: %.2f'%(np.sqrt(MSE))) #1755.09
 
 
 ### Linear Regression
@@ -192,7 +189,7 @@ r2 = lr.score(X_train, Y_train)
 print('%.2f' %(r2)) # / 0.33
 Y_pred = lr.predict(X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Improved LR RMSE: %.2f' %(np.sqrt(MSE))) #1671.12
+print('Improved LR RMSE: %.2f' %(np.sqrt(MSE))) #1660.37
 
 ### KNN
 grid_params = {
@@ -206,7 +203,7 @@ grid_results = knn.fit(X_train, Y_train)
 
 Y_pred = knn.predict(X_test)
 RMSE_knn = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('KNN RMSE: %.f' %(RMSE_knn)) #1590 
+print('KNN RMSE: %.2f' %(RMSE_knn)) #1617 
 
 ### Polynomial Linear Regression
 results = []
@@ -234,7 +231,7 @@ r2 = lr_poly.score(X_train_poly, Y_train)
 Y_pred = lr_poly.predict(X_test_poly)
 print('%.2f' %(r2)) 
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Poly RMSE: %.2f' %(np.sqrt(MSE))) #1691.55
+print('Poly RMSE: %.2f' %(np.sqrt(MSE))) #1703.02
 
 ### XGBoost
 grid_params = {
@@ -267,7 +264,7 @@ xgb.fit(X_train, Y_train)
 
 Y_pred = xgb.predict(X_test)
 RMSE_xgb = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('XGB RMSE: %.2f' %(RMSE_xgb)) #1528.02
+print('XGB RMSE: %.2f' %(RMSE_xgb)) #1555.91
 
 idx = np.argsort(xgb.best_estimator_.feature_importances_)[-5:]
 
@@ -295,7 +292,8 @@ _X_test = np.concatenate([xgb_y_pred, knn_y_pred, lr_y_pred], axis=1)
 
 Y_pred = _lr.predict(_X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Stacking manual RMSE: %.2f' %(np.sqrt(MSE))) #1480.10
+print('Stacking manual RMSE: %.2f' %(np.sqrt(MSE))) #1503.61
+coef = _lr.coef_/np.sum(_lr.coef_)
 
 ### Stacking
 estimators = [('knn', knn), ('lr_poly', lr_poly), ('xgb', xgb)]

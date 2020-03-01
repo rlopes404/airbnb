@@ -53,13 +53,13 @@ A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseli
 
 |  Método | RMSE  |
 | ------------ | ------------ |
-| Mean | 1752.62 (18.41%) |
-| Regressão Linear | 1671.12 (12.90%) |
-| Regressão Linear Polinomial   |  1691.55 (14.29%)  |
-| KNN | 1590.00 (7.42%) | 
-| GB | 1528.02 (3.23%) |
-| Stacking | 1480.10 |
+| Mean | 1755.09 (18.41%) |
+| Regressão Linear | 1660.37 (12.90%) |
+| Regressão Linear Polinomial   |  1617 (14.29%)  |
+| KNN | 1703.02 (7.42%) | 
+| GB | 1555.91 (3.23%) |
+| Stacking | 1503.61 |
 
-Em problemas de regressão, apesar de inalcançável, zero é o RMSE ideal. Claramente o melhor RMSE obtido, igual a 1480.10, está longe de zero. Ao analisar estatísticas da variável preço, verifica-se que, mesmo após a remoção de outliers, há uma grande amplitude,  a saber, igual 5702 em que os valores mínimo e máximo são iguais a 29 e 5731, respectivamente. Além disso, há o desvio padrão é igual a 690.52. Por fim, no caso de Regressão Linear, é possível analisar os resíduos para avaliar os ajustes, como também estudar transformações log nas features ou variável de resposta (modelos log-linear, linear-log).
+Em problemas de regressão, apesar de inalcançável, zero é o RMSE ideal. Claramente o melhor RMSE obtido, igual a 1503.61, está longe de zero. Ao analisar estatísticas da variável preço, verifica-se que, mesmo após a remoção de outliers, há uma grande amplitude,  a saber, igual 4005 em que os valores mínimo e máximo são iguais a 29 e 4034, respectivamente. Além disso, há o desvio padrão é igual a 591.74. Por fim, no caso de Regressão Linear, é possível analisar os resíduos para avaliar os ajustes, como também estudar transformações log nas features ou variável de resposta (modelos log-linear, linear-log).
 
 Acredito que o desempenho foi prejudicado pelo descarte, por motivo de missing data, de colunas possivelmente relevantes para o problema. Mantivemos apenas features com porcentagem máxima de missing data  de 50% e imputamos com o valor zero. Outras estratégias de imputação (média, mediana, KNN, entre outras) podem ser investigadas. Por questões de tempo, uma vez que há dificuldades em utilizar GPU/TPU no Google Colab, não foi possível avaliar modelos de Deep Learning, sobretudo aqueles que explorem as features textuais descartadas. Por fim, vale ressaltar que foi possível reduzir o valor do RMSE ao remover instâncias com preço acima de 3000. Porém, acreditamos que esta não é uma estratégia justa, uma vez já havíamos removido os outliers com base no critério do z-score.
