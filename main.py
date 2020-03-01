@@ -203,7 +203,7 @@ grid_results = knn.fit(X_train, Y_train)
 
 Y_pred = knn.predict(X_test)
 RMSE_knn = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('KNN RMSE: %.2f' %(RMSE_knn)) #1617 
+print('KNN RMSE: %.2f' %(RMSE_knn)) #1617.08 
 
 ### Polynomial Linear Regression
 results = []
@@ -231,7 +231,7 @@ r2 = lr_poly.score(X_train_poly, Y_train)
 Y_pred = lr_poly.predict(X_test_poly)
 print('%.2f' %(r2)) 
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Poly RMSE: %.2f' %(np.sqrt(MSE))) #1703.02
+print('Poly RMSE: %.2f' %(np.sqrt(MSE))) #
 
 ### XGBoost
 grid_params = {
