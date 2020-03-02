@@ -36,7 +36,7 @@ from sklearn.ensemble import StackingRegressor
 to_plot = False
 
 ## load data
-name = 'data.csv'
+name = 'data/data.csv'
 data = pd.read_csv(name, sep=',', header=0)
 y_name = 'price'
 
