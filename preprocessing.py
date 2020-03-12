@@ -2,9 +2,17 @@ import pandas as pd
 import numpy as np
 
 data = pd.read_csv('listings-full.csv', sep=',')
-data['price'] = data['price'].str.replace('$','').str.replace(',','').astype(float)
-data['security_deposit'] = data['security_deposit'].str.replace('$','').str.replace(',','').astype(float)
-data['extra_people'] = data['extra_people'].str.replace('$','').str.replace(',','').astype(float)
+
+
+cols = ['price', 'security_deposit', 'extra_people']
+data[cols] = data[cols].apply(lambda x: x.str.replace('$','').str.replace(',','').astype(float))
+
+#data['price'] = data['price'].str.replace('$','').str.replace(',','').astype(float)
+#data['security_deposit'] = data['security_deposit'].str.replace('$','').str.replace(',','').astype(float)
+#data['extra_people'] = data['extra_people'].str.replace('$','').str.replace(',','').astype(float)
+
+for k,v in zip(data.dtypes.index, data.dtypes):
+    print('%s \t %s' %(k,v))
 
 df = data.select_dtypes(include=np.number)
 
@@ -16,7 +24,7 @@ df = data[list(cols)]
 
 df['num_amenities'] = df['amenities'].apply(lambda x: len(x.split(',')))
 
-df.dropna(axis=1, how='all', inplace=True)
+#df.dropna(axis=1, how='all', inplace=True)
 
 df = df[df.columns[df.count(axis=0)/len(df) > 0.5]]
 
@@ -31,11 +39,6 @@ dff = dff[~dff['neighbourhood'].isna()]
 
 dff.fillna(0, inplace=True)
 
-
-#dff = pd.concat([dff, pd.get_dummies(dff['bed_type'], prefix='is')], axis=1)
-#dff = pd.concat([dff, pd.get_dummies(dff['room_type'], prefix='is')], axis=1)
-
-#dff = dff.drop(columns=['bed_type', 'room_type'])
 
 dff.count(axis=0)/len(dff)
 
