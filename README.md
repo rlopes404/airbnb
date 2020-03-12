@@ -1,6 +1,6 @@
 # Airbnb - Previsão do preço da estadia
 
-Todos os algoritmos foram implementados em Python, utilizando pacotes numpy, pandas, scikit-learn e xgboost.
+Todos os algoritmos foram implementados em Python, utilizando pacotes numpy, pandas, scikit-learn e XGBoost.
 
 Dataset:
 - Dataset utilizado: listings.csv.gz, 22 de Novembro, 2019
@@ -32,7 +32,7 @@ Além desses, utilizamos um baseline padrão que consiste em prever constantemen
 
 ## Qual foi o critério utilizado na seleção do modelo final?
 
-Para cada algoritmo avaliado, utilizamos as métricas Root Mean Squared Error (RMSE) e Mean Absolute Percentage Error (MAPE) no conjunto de validação para escolher o modelo final a ser usado no conjunto de teste. Para o algoritmo Regressão Linear Polinomial, investigamos polinômios de graus dois apenas por limitação de memória (hardware). Para o algoritmo KNN, avaliamos por meio de Grid Search com base nas configurações do parâmetro K (número de vizinhos utilizados para regressão) assumindo valores no conjunto {1, 5, 10}, e pesos uniformes ou pesos com base no inverso da distância entre os pontos. Para o algoritmo XGB, avaliamos por meio de Grid Search os seguintes parâmetros: taxa de aprendizado, número de estimadores, profundidade máxima, taxa de amostragem dos dados, taxa de amostragem das colunas; o 'early stopping rounds' foi fixado em 10.
+Para cada algoritmo avaliado, utilizamos as métricas Root Mean Squared Error (RMSE) e Mean Absolute Percentage Error (MAPE) no conjunto de validação para escolher o modelo final a ser usado no conjunto de teste. Para o algoritmo Regressão Linear Polinomial, investigamos polinômios de graus dois apenas por limitação de memória (hardware). Para o algoritmo KNN, avaliamos por meio de Grid Search com base nas configurações do parâmetro K (número de vizinhos utilizados para regressão) assumindo valores no conjunto {1, 5, 10}, e pesos uniformes ou pesos com base no inverso da distância entre os pontos. Para o algoritmo GB, avaliamos por meio de Grid Search os seguintes parâmetros: taxa de aprendizado, número de estimadores, profundidade máxima, taxa de amostragem dos dados, taxa de amostragem das colunas; o 'early stopping rounds' foi fixado em 10.
 
 ## Qual foi o critério utilizado para validação do modelo? Por que escolheu utilizar este método?
 
@@ -40,7 +40,7 @@ Para validar o modelo, utilizamos a técnica Random Train/Test Split onde o conj
 
 ## Quais evidências você possui de que seu modelo é suficientemente bom?
 
-A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseline mais fraco, que consiste em prever constantemente a média, apresenta um RMSE 17.5% superior ao nosso melhor algoritmo, a saber, obtido por meio da técnica Stacking Ensemble. Pode-se concluir que a introdução de features polinomiais não melhora o desempenho do algortimo Regressão Linear em termos de RMSE. Embora, em termos de MAPE, a introdução features polinomiais de fato melhora o poder preditivo da Regressão Linear. KNN apresentou resultados superiores àqueles fornecidos pela Regressão Linear em em amas as métricas. Se por um lado XGB apresenta RMSE 4.1% superior ao Stacking, por outro lado,  Stacking apresenta um MAPE 80.23% superior àquele apresentado por GB. Com base nos resultados, concluímos que o modelo a ser utilizado em produção deve ser GB. Vale ressaltar que não levamos em conta a complexidade do modelo para decidir o modelo final. Por exemplo, poderíamos utilizar o Akaike Information Criterion (AIC) para escolher o modelo levando em conta sua complexidade, dada em função do número de parâmetros.
+A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseline mais fraco, que consiste em prever constantemente a média, apresenta um RMSE 17.5% superior ao nosso melhor algoritmo, a saber, obtido por meio da técnica Stacking Ensemble. Pode-se concluir que a introdução de features polinomiais não melhora o desempenho do algortimo Regressão Linear em termos de RMSE. Embora, em termos de MAPE, a introdução features polinomiais de fato melhora o poder preditivo da Regressão Linear. KNN apresentou resultados superiores àqueles fornecidos pela Regressão Linear em em amas as métricas. Se por um lado GB apresenta RMSE 4.1% superior ao Stacking, por outro lado,  Stacking apresenta um MAPE 80.23% superior àquele apresentado por GB. Com base nos resultados, concluímos que o modelo a ser utilizado em produção deve ser GB. Vale ressaltar que não levamos em conta a complexidade do modelo para decidir o modelo final. Por exemplo, poderíamos utilizar o Akaike Information Criterion (AIC) para escolher o modelo levando em conta sua complexidade, dada em função do número de parâmetros.
 
 | Método | RMSE | MAPE |
 | --- | --- | --- |
