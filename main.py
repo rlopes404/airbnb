@@ -38,23 +38,22 @@ to_plot = False
 ## load data
 name = 'data/data.csv'
 data = pd.read_csv(name, sep=',', header=0)
+
 y_name = 'price'
 
 data.head(n=10)
 
-data.shape
-
 #checking duplicate columns
-np.sum(data.duplicated()) == 0
+#np.sum(data.duplicated()) == 0
 
-#checking price equals 0
+#checking price equals 0 and other columns
 data = data[data[y_name] > 0]
 data = data[data['beds'] != 0]
 data = data[data['bedrooms'] != 0]
 data = data[data['accommodates'] != 0]
 
 ##evaluating for missing data
-data.count(axis=0)/len(data)
+#data.count(axis=0)/len(data)
 
 
 X_train, X_test = train_test_split(data, test_size=0.2, random_state=0)
@@ -69,7 +68,7 @@ X_train.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=False
 X_train.groupby('neighbourhood')[y_name].agg('count').sort_values(ascending=False)
 
 
-labels = data.groupby('neighbourhood')[y_name].agg('median').sort_values(ascending=True).index
+labels = data.groupby('neighbourhood')[y_name].agg('mean').sort_values(ascending=True).index
 _map = { v: (k+1) for k,v in enumerate(labels)}
 replace_map = {'neighbourhood' : _map}
 
@@ -112,7 +111,8 @@ cols = ['availability_30', 'availability_60', 'availability_90', 'availability_3
 X_train.drop(columns=cols, inplace=True)
 X_valid.drop(columns=cols, inplace=True)
 X_test.drop(columns=cols, inplace=True)
-X_train.info()
+
+#X_train.info()
 
 assert X_train.isna().sum().sum() == 0
 assert X_valid.isna().sum().sum() == 0
@@ -142,13 +142,18 @@ if to_plot:
 
     #pairplot
     corrs = X_train.corr()[y_name].apply(abs)
-    labels = corrs[corrs > 0.3].index
+    threshold = 0.1
+    labels = corrs[corrs > threshold].index
 
-    _df = X_train.copy()
-    _labels = list(labels)
-    _labels.append('price_log')
-    _df['price_log'] = _df['price'].apply(math.log)
-    pair_plot = sns.pairplot(_df, vars=_labels)
+    print('num. coor > %.1f: \t %f' %(threshold, len(labels)/X_train.shape[1]))
+    print(corrs)
+
+
+    x_vars = list(labels)
+    x_vars.remove(y_name)
+    y_vars = [y_name]
+
+    pair_plot = sns.pairplot(X_train,  y_vars = y_vars, x_vars = x_vars)
     pair_plot.savefig("pairplot.png")
 
     plt.figure(figsize=(9, 8))
@@ -157,10 +162,6 @@ if to_plot:
 
     ### assessing correlation
     #sns.heatmap(df.corr(),cmap='BrBG',annot=True)
-
-##  exploring the target variable
-X_train[y_name].describe()
-#std is high
 
 
 #removing outliers whose the absolute value of their z score values are greater than threshold
@@ -190,8 +191,7 @@ print('Mean MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
 ### Linear Regression
 lr = LinearRegression().fit(X_train, Y_train)
 r2 = lr.score(X_train, Y_train)
-print('%.2f' %(r2)) # / 0.33
-Y_pred = lr.predict(X_test)
+print('R2: %.2f' %(r2)) # / 0.33
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
 print('LR RMSE: %.2f' %(np.sqrt(MSE))) #1660.37
 print('LR MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
@@ -236,7 +236,7 @@ X_test_poly = poly.fit_transform(X_test)
 lr_poly =  LinearRegression().fit(X_train_poly, Y_train)
 r2 = lr_poly.score(X_train_poly, Y_train)
 Y_pred = lr_poly.predict(X_test_poly)
-print('%.2f' %(r2)) 
+print('R2: %.2f' %(r2)) 
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
 print('Poly RMSE: %.2f' %(np.sqrt(MSE)))
 print('Poly MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
@@ -283,7 +283,10 @@ plt.bar(labels, values)
 plt.show()
 
 ### stacking manual
-lr_y_pred = lr.predict(X_valid).reshape(-1,1)
+_X_valid_poly = poly.fit_transform(X_valid)
+_X_test_poly = poly.fit_transform(X_test)
+
+lr_y_pred = lr_poly.predict(_X_valid_poly).reshape(-1,1)
 knn_y_pred = knn.predict(X_valid).reshape(-1,1)
 xgb_y_pred = xgb.predict(X_valid).reshape(-1,1)
 
@@ -292,7 +295,7 @@ _X_train = np.concatenate([xgb_y_pred, knn_y_pred, lr_y_pred], axis=1)
 _lr = LinearRegression().fit(_X_train, Y_valid)
 
 
-lr_y_pred = lr.predict(X_test).reshape(-1,1)
+lr_y_pred = lr_poly.predict(_X_test_poly).reshape(-1,1)
 knn_y_pred = knn.predict(X_test).reshape(-1,1)
 xgb_y_pred = xgb.predict(X_test).reshape(-1,1)
 _X_test = np.concatenate([xgb_y_pred, knn_y_pred, lr_y_pred], axis=1)
@@ -300,7 +303,5 @@ _X_test = np.concatenate([xgb_y_pred, knn_y_pred, lr_y_pred], axis=1)
 
 Y_pred = _lr.predict(_X_test)
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Stacking manual RMSE: %.2f' %(np.sqrt(MSE))) #1503.61
+print('Stacking manual RMSE: %.2f' %(np.sqrt(MSE)))
 print('Stacking manual MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
-
-coef = _lr.coef_/np.sum(_lr.coef_)
