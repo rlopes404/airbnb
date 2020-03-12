@@ -184,16 +184,17 @@ def MAPE(y_true, y_pred):
 
 Y_pred = np.repeat(np.mean(Y_train), len(Y_test))
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('Mean RMSE: %.2f'%(np.sqrt(MSE))) #1755.09
+print('Mean RMSE: %.2f'%(np.sqrt(MSE)))
 print('Mean MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
 
 
 ### Linear Regression
 lr = LinearRegression().fit(X_train, Y_train)
 r2 = lr.score(X_train, Y_train)
-print('R2: %.2f' %(r2)) # / 0.33
+Y_pred = lr.predict(X_test)
+print('R2: %.2f' %(r2)) 
 MSE = metrics.mean_squared_error(Y_test, Y_pred)
-print('LR RMSE: %.2f' %(np.sqrt(MSE))) #1660.37
+print('LR RMSE: %.2f' %(np.sqrt(MSE)))
 print('LR MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
 
 
@@ -272,7 +273,7 @@ xgb.fit(X_train, Y_train)
 
 Y_pred = xgb.predict(X_test)
 RMSE_xgb = np.sqrt(metrics.mean_squared_error(Y_test, Y_pred))
-print('XGB RMSE: %.2f' %(RMSE_xgb)) #1555.91
+print('XGB RMSE: %.2f' %(RMSE_xgb))
 print('XGB MAPE: %.2f'%(MAPE(Y_test, Y_pred)))
 
 idx = np.argsort(xgb.best_estimator_.feature_importances_)[-5:]
