@@ -3,7 +3,7 @@
 Todos os algoritmos foram implementados em Python, utilizando pacotes numpy, pandas, scikit-learn e xgboost.
 
 Dataset:
-- Dataset utilizado: listings.csv.gz, 22 de November, 2019
+- Dataset utilizado: listings.csv.gz, 22 de Novembro, 2019
 - Dataset disponível em [Link](http://insideairbnb.com/get-the-data.html)
 
 ## Como foi a definição da sua estratégia de modelagem?
@@ -11,20 +11,13 @@ Dataset:
 Após fazer um tratamento do dataset, por exemplo, remoção de missing data, imputação de dados, a base de dados foi particionada em treino, validação e teste. No conjunto de treino, iniciou-se a análise exploratória de dados que resultou na criação de features com base em hipóteses:
 
 - Acredita-se que o atributo nominal 'neighbourhood' influencia o preço, dado que reigões mais nobres tendem a ter um preço elevado. Para esse fim, os dados foram agrupados em função do atributo e a média de cada grupo foi obtida. Em seguida, as médias foram ordenadas e, então, um valor numérico atribuído a uma entrada foi definido como a posição no vetor ordenado. Deste modo, transformou-se o atributo nominal textual em um atributo numérico ordinal. Uma alternativa seria executar um algoritmo de clusterização (k-means ou hierarchical clustering) para definir os rótulos.
-- Acredita-se que os atributos nominais 'bed_type' e 'room_type' influenciam o preço. Por exemplo, um sofá fornece geralmente um conforto inferior comparado a uma cama, impactando, então, o preço; um quarto privativo, por sua vez, geralmente é mais caro comparado a um quarto coletivo. Portanto, foram criados atributos numéricos com uma faixa de valores para modelar esse conceito ordinal; estratégia similar àquela usada no atributo 'neighbourhood', descrito anteriormente. Além dessa estratégia, tentamos a estratégia one-hot encoding. Contudo, o aumento no número de atributos tornou o treinamento lento. A tabela abaixo ilustra o preço médio por 'room_type':
-
-| Tipo | Preço |
-| ----- | ------ |
-| Entire home/apt | 838.34 |
-| Hotel room | 704.67 |
-| Private room | 269.81 |
-| Shared room | 251.66 | 
+- Acredita-se que os atributos nominais 'bed_type' e 'room_type' influenciam o preço. Por exemplo, um sofá fornece geralmente um conforto inferior comparado a uma cama, impactando, então, o preço; um quarto privativo, por sua vez, geralmente é mais caro comparado a um quarto coletivo. Portanto, foram criados atributos numéricos com uma faixa de valores para modelar esse conceito ordinal; estratégia similar àquela usada no atributo 'neighbourhood', descrito anteriormente. Além dessa estratégia, tentamos a estratégia one-hot encoding. Contudo, o aumento no número de atributos tornou o treinamento lento. 
 
 - O atributo 'amenities', que é uma lista de palavras, representa comodidades que a hospedagem possui. Portanto, criou-se uma feature que consiste no número de amenities que a hospedagem fornece. Este novo atributo se baseia na hipótese de que o preço é diretamente proporcional ao número de comodidades.
 
-Vale ressaltar que neste projeto, descartamos os campos de texto corrido tais como 'Summary', Standard', entre outros. Nesse caso, é possível realizar análise de sentimento sobre texto ou extrair features bag-of-words após eliminar stop words. Essas features podem aumentar o poder preditivo dos modelos.
+Vale ressaltar que neste projeto, descartamos os campos de texto corrido tais como 'Summary', 'Standard', entre outros. Nesse caso, é possível realizar análise de sentimento sobre texto ou extrair features bag-of-words após eliminar stop words. Essas features podem aumentar o poder preditivo dos modelos.
 
-Em seguida, foi avaliada a correlação linear de Pearson entre as features e o preço. Dentre as variáveis tratadas ou criadas, as variáveis 'room_type', 'bed_type', 'neighbourhood' e 'num_amenities' apresentaram coeficientes de correlação iguais a 0.30, 0.02, 0.24 e -0.08, respectivamente. Por fim, outliers foram removidos do treino caso o valor absoluto do z-score seja supoerior a 2 unidades de desvio padrão. Features com coeficiente de correlação inferior a 0.01 foram removidas do modelo. Ao total, há 26 features.
+Em seguida, foi avaliada a correlação linear de Pearson entre as features e o preço. Outliers foram removidos do treino caso o valor absoluto do z-score seja supoerior a 2 unidades de desvio padrão. Features com coeficiente de correlação inferior a 0.01 foram removidas do modelo.
 
 
 ## Como foi definida a função de custo utilizada?
@@ -39,7 +32,7 @@ Além desses, utilizamos um baseline padrão que consiste em prever constantemen
 
 ## Qual foi o critério utilizado na seleção do modelo final?
 
-Para cada algoritmo avaliado, utilizamos a métrica Root Mean Squared Error (RMSE) no conjunto de validação para escolher o modelo final. Para o algoritmo Regressão Linear Polinomial, investigamos polinômios de graus dois e três. Para o algoritmo KNN, avaliamos por meio de Grid Search com base nas configurações do parâmetro K (número de vizinhos utilizados para regressão) assumindo valores no conjunto {1, 5, 10}, e pesos uniformes ou pesos com base no inverso da distância entre os pontos. Para o algoritmo GB, avaliamos por meio de Grid Search os seguintes parâmetros: taxa de aprendizado, número de estimadores, profundidade máxima, taxa de amostragem dos dados, taxa de amostragem das colunas; o 'early stopping rounds' foi fixado em 10.
+Para cada algoritmo avaliado, utilizamos as métricas Root Mean Squared Error (RMSE) e Mean Absolute Percentage Error (MAPE) no conjunto de validação para escolher o modelo final a ser usado no conjunto de teste. Para o algoritmo Regressão Linear Polinomial, investigamos polinômios de graus dois apenas por limitação de memória (hardware). Para o algoritmo KNN, avaliamos por meio de Grid Search com base nas configurações do parâmetro K (número de vizinhos utilizados para regressão) assumindo valores no conjunto {1, 5, 10}, e pesos uniformes ou pesos com base no inverso da distância entre os pontos. Para o algoritmo XGB, avaliamos por meio de Grid Search os seguintes parâmetros: taxa de aprendizado, número de estimadores, profundidade máxima, taxa de amostragem dos dados, taxa de amostragem das colunas; o 'early stopping rounds' foi fixado em 10.
 
 ## Qual foi o critério utilizado para validação do modelo? Por que escolheu utilizar este método?
 
@@ -47,17 +40,17 @@ Para validar o modelo, utilizamos a técnica Random Train/Test Split onde o conj
 
 ## Quais evidências você possui de que seu modelo é suficientemente bom?
 
-A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseline mais fraco, que consiste em prever constantemente a média, apresenta um RMSE 16.72% superior ao nosso melhor algoritmo, a saber, obtido por meio da técnica Stacking Ensemble. Pode-se concluir que a introdução de features polinomiais não melhora o desempenho do algortimo Regressão Linear. O algoritmo KNN apresentou resultados superiores àqueles fornecidos pela Regressão Linear. Por fim, o algoritmo GB apresenta RMSE 3.23% superior ao Stacking.
+A tabela abaixo apresenta o RMSE para cada um dos modelos apresentados. O baseline mais fraco, que consiste em prever constantemente a média, apresenta um RMSE 17.5% superior ao nosso melhor algoritmo, a saber, obtido por meio da técnica Stacking Ensemble. Pode-se concluir que a introdução de features polinomiais não melhora o desempenho do algortimo Regressão Linear em termos de RMSE. Embora, em termos de MAPE, a introdução features polinomiais de fato melhora o poder preditivo da Regressão Linear. KNN apresentou resultados superiores àqueles fornecidos pela Regressão Linear em em amas as métricas. Se por um lado XGB apresenta RMSE 4.1% superior ao Stacking, por outro lado,  Stacking apresenta um MAPE 80.23% superior àquele apresentado por GB. Com base nos resultados, concluímos que o modelo a ser utilizado em produção deve ser GB. Vale ressaltar que não levamos em conta a complexidade do modelo para decidir o modelo final. Por exemplo, poderíamos utilizar o Akaike Information Criterion (AIC) para escolher o modelo levando em conta sua complexidade, dada em função do número de parâmetros.
 
-| Método | RMSE |
-| ------------ | ------------ |
-| Mean | 1755.09 (16.72%) |
-| Regressão Linear | 1660.37 (10.42%) |
-| Regressão Linear Polinomial | 1703.02 (13.26%) |
-| KNN | 1617.08 (7.54%) | 
-| GB | 1555.91 (3.47%) |
-| Stacking | 1503.61 |
+| Método | RMSE | MAPE |
+| --- | --- | --- |
+| Mean | 1755.09 (17.5%) | 167.55 (154.2%) |
+| LR | 1658.31 (11.0%) | 97.38  (47.7%)| 
+| KNN | 1618.34 (8.3%)| 79.27 (20.2%) |
+| Poly | 1695.15 (13.5%) | 81.86 (24.2%) |
+| GB | 1555.02 (4.1%) | **65.92** |
+| Stacking | **1493.61** | 118.81 (80.23%) |
 
-Em problemas de regressão, apesar de inalcançável, zero é o RMSE ideal. Claramente o melhor RMSE obtido, igual a 1503.61, está longe de zero. Ao analisar estatísticas da variável preço, verifica-se que, mesmo após a remoção de outliers, há uma grande amplitude, a saber, igual 4005 em que os valores mínimo e máximo são iguais a 29 e 4034, respectivamente. Além disso, o desvio padrão é igual a 591.74. Por fim, é possível analisar os resíduos para avaliar os ajustes, como também estudar transformações log nas features ou variável de resposta (modelos log-linear, linear-log) ou realizar uma análise breakdown, muito comum na área de sistema de recomendação, para entender em quais cenários os modelos vem sistematicamente errando. Por exemplo, pela análise breakdown pode-se entender se o modelo erra sistematicamente em determinadas faixas de preços ou se tende a superestimar/subestimar os preços.
+Em problemas de regressão, apesar de inalcançável, zero é o RMSE ideal. Claramente o melhor RMSE obtido está longe de zero. Ao analisar estatísticas da variável preço, verifica-se que, mesmo após a remoção de outliers, há uma grande amplitude nos preços e elevado desvio padrão. Por fim, ao analisar os resíduos da regressão linear para avaliar os ajustes, é possível concluir a violação de algumas suposições. Para remediar a situação, podemos investigar transformações log nos preditores ou variável de resposta (modelos log-linear, linear-log) ou realizar análise breakdown, muito comum na área de sistema de recomendação, para entender em quais cenários os modelos vem sistematicamente errando. Por exemplo, pela análise breakdown pode-se entender se o modelo erra sistematicamente em determinadas faixas de preços ou se tende a superestimar/subestimar os preços.
 
-Acredito que o desempenho foi prejudicado pelo descarte, por motivo de missing data, de colunas possivelmente relevantes para o problema. Mantivemos apenas features com porcentagem máxima de missing data de 50% e imputamos com o valor zero. Outras estratégias de imputação (média, mediana, KNN, entre outras) podem ser investigadas. Por questões de tempo, uma vez que há dificuldades em utilizar GPU/TPU no Google Colab, não foi possível avaliar modelos de Deep Learning, sobretudo aqueles que explorem aquelas features textuais descartadas. Por fim, vale ressaltar que foi possível reduzir o valor do RMSE ao remover instâncias com preço acima de 3000. Porém, acreditamos que esta não é uma estratégia justa, uma vez já havíamos removido os outliers com base no critério do z-score.
+Acredito que o desempenho foi prejudicado pelo descarte, por motivo de missing data, de colunas possivelmente relevantes para o problema. Mantivemos apenas features com porcentagem máxima de missing data de 50% e imputamos com o valor zero. Outras estratégias de imputação (média, mediana, KNN, entre outras) podem ser investigadas. Por questões de tempo, uma vez que há dificuldades em utilizar GPU/TPU no Google Colab, uma vez que o processo pode ser morto a qualquer momento, não foi possível avaliar modelos de Deep Learning, sobretudo aqueles que explorem aquelas features textuais descartadas. Por fim, vale ressaltar que foi possível reduzir o valor do RMSE ao remover instâncias com preço acima de 3000. Porém, acreditamos que esta não é uma estratégia justa, uma vez já havíamos removido os outliers com base no critério do z-score.
